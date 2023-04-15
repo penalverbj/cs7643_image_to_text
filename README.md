@@ -42,13 +42,12 @@ Once it is done installing your environment is done setting up.
 https://github.com/microsoft/Cream/tree/main/TinyViT
 ```
 $ git clone https://github.com/microsoft/Cream.git
-$ cd Cream/TinyViT
+$ cp -r Cream/TinyViT [GIT_REPO_LOC]/models/
+$ cd [GIT_REPO_LOC]/models/TinyViT
 $ pip install -r requirements.txt
 $ python
 >>> import torch
 >>> from models.tiny_vit import tiny_vit_21m_224
 >>> model = tiny_vit_21m_224(pretrained=True)
->>> torch.save(model, '[GIT_REPO_DIR]/models/tinyvit_21M.pt')
+>>> torch.save(model, './tinyvit_21M.pt')
 ```
-
-test
