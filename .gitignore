@@ -1,6 +1,7 @@
 # Local data files
 data/diffusiondb_huggingface/
 data/coco/
+models/TinyViT
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
