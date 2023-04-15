@@ -35,4 +35,18 @@ conda activate 7643final
 
 Please follow the instructions on their website to download the version that is appropriate for your machine: [PyTorch Install](https://pytorch.org/)
 
-Once it is done installing your environment is done setting up.
+Once it is done installing your environment is done setting up.  
+
+## Importing pretrained models
+### TinyViT
+https://github.com/microsoft/Cream/tree/main/TinyViT
+```
+$ git clone https://github.com/microsoft/Cream.git
+$ cd Cream/TinyViT
+$ pip install -r requirements.txt
+$ python
+>>> import torch
+>>> from models.tiny_vit import tiny_vit_21m_224
+>>> model = tiny_vit_21m_224(pretrained=True)
+>>> torch.save(model, '[GIT_REPO_DIR]/models/tinyvit_21M.pt')
+```
