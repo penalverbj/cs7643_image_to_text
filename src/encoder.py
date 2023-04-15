@@ -15,6 +15,12 @@ def __init__(self, hidden_dim=128):
     sys.path.append(home_dir + '/models/TinyViT')
     self.model = torch.load(home_dir + '/models/TinyViT/tinyvit_21M.pt')
 
+    # TODO: Remove head of model and replace with custom FCL with output hidden_dim
+    self.hidden_dim = hidden_dim
     # self.models.patch_embed
     # self.models.layers
     # self.models.layers[0]
+    # https://stackoverflow.com/questions/69376651/how-to-delete-replace-layer-in-existing-model
+
+def forward():
+    raise NotImplementedError
