@@ -8,6 +8,7 @@ dependencies:
   - numpy
   - numpy-base
   - anaconda pillow
+  - timm
   - pip
   - pip:
     - opencv-contrib-python
