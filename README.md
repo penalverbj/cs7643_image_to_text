@@ -50,3 +50,5 @@ $ python
 >>> model = tiny_vit_21m_224(pretrained=True)
 >>> torch.save(model, '[GIT_REPO_DIR]/models/tinyvit_21M.pt')
 ```
+
+test
