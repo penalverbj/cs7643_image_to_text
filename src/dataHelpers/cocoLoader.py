@@ -1,7 +1,7 @@
-import matplotlib.pyplot as plt
-from PIL import Image
+# import matplotlib.pyplot as plt
+# from PIL import Image
 import numpy as np
-import cocoParser
+from cocoParser import cocoParser
 
 class cocoLoader:
     def __init__(self, ann_path, imgs_path):
@@ -25,24 +25,27 @@ class cocoLoader:
         imgs_out = []
 
         for i, im in enumerate(selected_img_ids):
-            temp = {
-                "image" : f"{self.coco_images_dir}/{str(im).zfill(12)}.jpg",
-                "ann_ids" : self.parser.get_annIds(im),
-                "annotations" : self.parser.load_anns(ann_ids),
-                "license" : self.parser.get_imgLicenses(im)[0]["name"],
-            }
+            image = f"{self.coco_images_dir}/{str(im).zfill(12)}.jpg"
+            ann_ids = self.parser.get_annIds(im)
+            annotations = self.parser.load_anns(ann_ids)
 
+            temp = {
+                "image" : image,
+                "ann_ids" : ann_ids,
+                "annotations" : annotations
+            }
             imgs_out.append(temp)
 
         return imgs_out
 
 
-def __main__():
-    loader = cocoLoader("data/coco/annotations/captions_train2017.json", "data/coco/train2017")
+def main():
+    loader = cocoLoader("C:/Users/penal/DeepLearning/final/data\coco/annotations/captions_train2017.json", "data/coco/train2017")
     imgs = loader.get_imgs(1, random=True)
     print(imgs[0])
 
-
+if __name__ == "__main__":
+    main()
 
 
 # num_imgs_to_disp = 4
