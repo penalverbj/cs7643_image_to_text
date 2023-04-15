@@ -7,6 +7,7 @@ dependencies:
   - matplotlib-base
   - numpy
   - numpy-base
+  - anaconda pillow
   - pip
   - pip:
     - opencv-contrib-python
