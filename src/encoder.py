@@ -9,7 +9,7 @@ class Encoder(nn.Module):
     Please see https://github.com/microsoft/Cream/tree/main/TinyViT for details
     """
 
-def __init__(self, hidden_dim=128):
+def __init__(self, hidden_dim=1000):
     super(Encoder, self).__init__()
     home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
     sys.path.append(home_dir + '/models/TinyViT')
