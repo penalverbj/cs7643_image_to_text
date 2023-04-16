@@ -40,6 +40,7 @@ Once it is done installing your environment is done setting up.
 ## Importing pretrained models
 ### TinyViT
 https://github.com/microsoft/Cream/tree/main/TinyViT
+We're including the entire git repo because the pre-trained pytorch model requires the same dir structure when imported
 ```
 $ git clone https://github.com/microsoft/Cream.git
 $ cp -r Cream/TinyViT [GIT_REPO_LOC]/models/
