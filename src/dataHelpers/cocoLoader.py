@@ -1,6 +1,11 @@
 # import matplotlib.pyplot as plt
 # from PIL import Image
+import sys
+
+import git
 import numpy as np
+from PIL import Image
+
 from cocoParser import cocoParser
 
 class cocoLoader:
@@ -9,6 +14,9 @@ class cocoLoader:
         self.coco_images_dir=imgs_path
         self.parser = cocoParser(self.coco_annotations_file, self.coco_images_dir)
         self.current_idx = 0 # temporary, should probably do it some other way
+        home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
+        sys.path.append(home_dir + '/models/TinyViT')
+        self.home_dir = home_dir
 
     def get_imgs(self, num, random=False):
         img_ids = self.parser.get_imgIds()
@@ -25,7 +33,7 @@ class cocoLoader:
         imgs_out = []
 
         for i, im in enumerate(selected_img_ids):
-            image = f"{self.coco_images_dir}/{str(im).zfill(12)}.jpg"
+            image = Image.open(f"{self.home_dir}/{self.coco_images_dir}/{str(im).zfill(12)}.jpg")
             ann_ids = self.parser.get_annIds(im)
             annotations = self.parser.load_anns(ann_ids)
 
@@ -40,7 +48,9 @@ class cocoLoader:
 
 
 def main():
-    loader = cocoLoader("C:/Users/penal/DeepLearning/final/data\coco/annotations/captions_train2017.json", "data/coco/train2017")
+    home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
+    sys.path.append(home_dir + '/models/TinyViT')
+    loader = cocoLoader(f"{home_dir}/data\coco/annotations/captions_train2017.json", "data/coco/train2017")
     imgs = loader.get_imgs(1, random=True)
     print(imgs[0])
 
