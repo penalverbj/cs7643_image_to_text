@@ -18,7 +18,16 @@ class ImageCap(nn.Module):
                                      num_beams=self.num_beams)
         
     def forward(self, X):
-        # TODO: Not sure if this works... haven't checked if encoder output shape matches what's expected by decoder
-        out = self.encoder_model(X)
-        out = self.decoder_model(out)
+        # TODO: Error. Encoder output shape doesn't match what's expected by decoder
+        # encoder currently outputs (1, hidden_dim)
+        # while decoder wants (1, n, hidden_dim), where n can be anything
+        # This because the output of the encoder was originally a vector for classification
+        # While while decoder is expecting an embeddeding for each nth word
+        # How do we get the last hidden state of TinyViT to pass into decoder?
+        # With huggingface output, this is easy, but idk for custom model
+        # This is the equiv of getting the hidden state for each image patch
+        # Do we use hooks??
+        # https://www.kaggle.com/code/rhtsingh/utilizing-transformer-representations-efficiently
+        out = self.encoder_model.forward(X)
+        out = self.decoder_model.forward(out)
         return out
