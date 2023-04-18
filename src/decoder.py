@@ -7,7 +7,9 @@ class Decoder(nn.Module):
     DistilGPT2 language decoder
     Please see https://huggingface.co/docs/transformers/v4.28.1/en/model_doc/gpt2#overview 
     https://huggingface.co/transformers/v3.3.1/pretrained_models.html
-    https://huggingface.co/blog/how-to-generate for details
+    https://huggingface.co/blog/how-to-generate
+    https://www.kaggle.com/code/rhtsingh/utilizing-transformer-representations-efficiently
+    for details
 
     Using GPT2 since it is a language decoder. DistilGPT2 has around 82M parameters,
     making it comparable to the alternative we were considering (DistilBERT)
