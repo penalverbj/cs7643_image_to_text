@@ -1,8 +1,12 @@
-# This will implement the forward pass of our teacher model
-# See https://huggingface.co/docs/transformers/model_doc/vision-encoder-decoder
-# for potential implementation
 """
-Copied from the above link
+This will implement the forward pass of our teacher model
+See https://huggingface.co/docs/transformers/model_doc/vision-encoder-decoder for potential implementation
+
+Also see decoder.py comments and links for more implementation details!
+
+
+Below is an example of how to implement an pre-trained teacher:
+
 import requests
 from PIL import Image
 
