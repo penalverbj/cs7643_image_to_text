@@ -16,40 +16,45 @@ class Decoder(nn.Module):
     https://www.kaggle.com/code/residentmario/notes-on-gpt-2-and-bert-models
     """
 
-def __init__(self, hidden_dim=1000, max_outseq_len=50):
+def __init__(self, hidden_dim=768, max_outseq_len=50, num_beams=5):
     super(Decoder, self).__init__()
+
+    # Initializing a pre-trained decoder model with a language head
+    # language head = Takes embedded vectors and turns them back into language tokens
     self.model = GPT2LMHeadModel.from_pretrained("distilgpt2")
     self.tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
 
-    # TODO: Create a pooler to make encoder outputs able to be inputed into decoder
-    # The first layer of the decoder are embedding layers
-    # If the input = (n, m), then the output of Embedding(v, h) is (n, m, h)
-    # Basically we need to mimic this
-    """
-        I copied this from 
-        VisionEncoderDecoderModel.from_encoder_decoder_pretrained("google/vit-base-patch16-224-in21k", "distilgpt2")
-        after comparing the encoder to
-        model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
-        and assessing the differences in their heads
-        (pooler): ViTPooler(
-            (dense): Linear(in_features=768, out_features=768, bias=True)
-            (activation): Tanh()
-            )
-    """
     self.hidden_dim = hidden_dim
-    # self.model.transformer.wte
-    # self.model.transformer.wpe
+    self.max_outseq_len = max_outseq_len
+    self.num_beams = num_beams
 
-    # Freeze all other layers
-    # The reasoning is that an image-captioner translates images into language space
-    # Since the pre-trained decoder can already properly dechiper a latent language vector,
-    # there is no need to modify it
-    # for param in self.model.parameters():
-    #    param.requires_grad = False
+    """
+    Freeze all layers
+    - The reasoning is that since the pre-trained decoder can already 
+      dechiper a latent language vector, the main training to be done
+      focused on the encoder. This hopefully reduces training time
+
+    - Could potentially unfreeze later during training for fine-tuned results
+    """
+    for param in self.model.parameters():
+        param.requires_grad = False
     
 
 def forward(self, X):
-    # X will be our hidden vector from the ViT encoder
-    beam_output = self.model.generate(X, max_length=50, num_beams=5, early_stopping=True)
-    out_seq = self.tokenizer.decode(beam_output[0], skip_special_tokens=True)
-    return out_seq
+    """
+    X will be our embedding hidden vector from the ViT encoder
+    inputs_embeds=X allows us to skip the embedding layers at the start of the GPT2 model
+    See https://discuss.huggingface.co/t/how-can-i-skip-gpt2lmheadmodel-embedding-layers/31648
+
+    Additional args in generate() are used to perform beam search on space of possible sentences
+    See https://huggingface.co/blog/how-to-generate
+    """
+    beam_output = self.model.generate(inputs_embeds=X,
+                                      max_length=self.max_outseq_len,
+                                      num_beams=self.num_beams,
+                                      early_stopping=True,
+                                      pad_token_id=self.tokenizer.eos_token_id)
+
+    # out_seq = self.tokenizer.decode(beam_output[0], skip_special_tokens=True)
+    # Return language tokens
+    return beam_output[0]
