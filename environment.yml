@@ -13,6 +13,7 @@ dependencies:
   - pip:
     - opencv-contrib-python
     - opencv-python
+    - transformers
   - timm==0.4.12
   - typing
 prefix: C:\Users\penal\anaconda3\envs\7643final
