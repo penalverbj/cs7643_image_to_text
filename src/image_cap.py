@@ -28,6 +28,11 @@ class ImageCap(nn.Module):
         # This is the equiv of getting the hidden state for each image patch
         # Do we use hooks??
         # https://www.kaggle.com/code/rhtsingh/utilizing-transformer-representations-efficiently
+        # Wait! See line 578 of https://github.com/microsoft/Cream/blob/main/TinyViT/models/tiny_vit.py
+        # We may just need to get rid of that mean!
+        # encoder_model.model.forward_features(pixel_values)
+        # Plan: Create another method in tiny_vit.py that is the same as foward_features, but does not
+        # do the mean!
         out = self.encoder_model.forward(X)
         out = self.decoder_model.forward(out)
         return out
