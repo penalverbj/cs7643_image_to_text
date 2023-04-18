@@ -21,24 +21,35 @@ def __init__(self, hidden_dim=1000, max_outseq_len=50):
     self.model = GPT2LMHeadModel.from_pretrained("distilgpt2")
     self.tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
 
-    # Freeze all layers
+    # TODO: Create a pooler to make encoder outputs able to be inputed into decoder
+    # The first layer of the decoder are embedding layers
+    # If the input = (n, m), then the output of Embedding(v, h) is (n, m, h)
+    # Basically we need to mimic this
+    """
+        I copied this from 
+        VisionEncoderDecoderModel.from_encoder_decoder_pretrained("google/vit-base-patch16-224-in21k", "distilgpt2")
+        after comparing the encoder to
+        model = ViTForImageClassification.from_pretrained('google/vit-base-patch16-224')
+        and assessing the differences in their heads
+        (pooler): ViTPooler(
+            (dense): Linear(in_features=768, out_features=768, bias=True)
+            (activation): Tanh()
+            )
+    """
+    self.hidden_dim = hidden_dim
+    # self.model.transformer.wte
+    # self.model.transformer.wpe
+
+    # Freeze all other layers
     # The reasoning is that an image-captioner translates images into language space
     # Since the pre-trained decoder can already properly dechiper a latent language vector,
     # there is no need to modify it
-    for param in self.model.parameters():
-        param.requires_grad = False
+    # for param in self.model.parameters():
+    #    param.requires_grad = False
     
 
 def forward(self, X):
     # X will be our hidden vector from the ViT encoder
-    # TODO: Figure out how to get 
-    # X = input_ids = tokenizer.encode('I enjoy walking with my cute dog', return_tensors='tf')
-    # So X is 1xn vector
-    # model.generate() will take this input, but say that it was expecting int instead of floats
-    # This is likely due to the embedding layer in GPT2
-    # So should I just remove these layers?
-    # However VisionEncoderDecoderModel.from_encoder_decoder_pretrained("microsoft/swin-base-patch4-window7-224-in22k", "distilgpt2")
-    # shows that the embedding layer is still in the decoder... what should we do?
     beam_output = self.model.generate(X, max_length=50, num_beams=5, early_stopping=True)
     out_seq = self.tokenizer.decode(beam_output[0], skip_special_tokens=True)
     return out_seq
