@@ -1,6 +1,9 @@
+import git
+import sys
 import requests
 from PIL import Image
 # from datasets import load_dataset
+from dataHelpers import cocoLoader
 
 from transformers import GPT2TokenizerFast, ViTImageProcessor, VisionEncoderDecoderModel
 
@@ -15,30 +18,34 @@ class Teacher():
     def process_batch(self):
         pass
 
-
-    def get_pixels_single_image(self):
-        url = "http://images.cocodataset.org/val2017/000000039769.jpg"
-        image = Image.open(requests.get(url, stream=True).raw)
+    def load_data(self):
+        home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
+        sys.path.append(home_dir + '/models/TinyViT')
+        loader = cocoLoader.cocoLoader("C:/Users\penal\DeepLearning/final\data\coco/annotations\captions_train2017.json", "data/coco/train2017")
+        self.data_set = loader.get_all_imgs()
+        print("DONE LOADING")
+    def get_pixels_single_image(self, image):
+        # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
+        # image = Image.open(requests.get(url, stream=True).raw)
+        # loader = cocoLoader.cocoLoader("C:/Users\penal\DeepLearning/final\data\coco/annotations\captions_train2017.json", "data/coco/train2017")
+        # imgs = loader.get_imgs(1, random=True)
+        # image = imgs[0]['image']
+        # print(imgs[0]['annotations'])
         pixel_values = self.image_processor(image, return_tensors="pt").pixel_values
         return pixel_values
 
-    def caption_single_image(self):
-        generated_ids = self.model.generate(self.get_pixels_single_image())
+    def caption_single_image(self, pixel_values):
+        generated_ids = self.model.generate(pixel_values)
         generated_text = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         print(generated_text)
 
 
 def test():
     teacher = Teacher()
-    encoder = teacher.model.encoder
-    decoder = teacher.model.decoder
-    pixel_values = teacher.get_pixels_single_image()
-    test_encoded = encoder(pixel_values)
-    print(test_encoded.last_hidden_state.shape)
-    print(test_encoded.pooler_output.shape)
-    test_decoded = decoder.generate(inputs_embeds=test_encoded.last_hidden_state)
-    decode = teacher.tokenizer.batch_decode(test_decoded, skip_special_tokens=True)[0]
-    print(decode)
+    teacher.load_data()
+    # pixel_values = teacher.get_pixels_single_image()
+    # teacher.caption_single_image(pixel_values)
+
 
 if __name__ == "__main__":
     test()

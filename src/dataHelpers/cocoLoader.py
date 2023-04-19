@@ -6,7 +6,7 @@ import git
 import numpy as np
 from PIL import Image
 
-from cocoParser import cocoParser
+from .cocoParser import cocoParser
 
 class cocoLoader:
     def __init__(self, ann_path, imgs_path):
@@ -45,7 +45,23 @@ class cocoLoader:
             imgs_out.append(temp)
 
         return imgs_out
+    def get_all_imgs(self):
+        img_ids = self.parser.get_imgIds()
+        imgs_out = []
 
+        for i, im in enumerate(img_ids):
+            image = Image.open(f"{self.home_dir}/{self.coco_images_dir}/{str(im).zfill(12)}.jpg")
+            ann_ids = self.parser.get_annIds(im)
+            annotations = self.parser.load_anns(ann_ids)
+
+            temp = {
+                "image": image,
+                "ann_ids": ann_ids,
+                "annotations": annotations
+            }
+            imgs_out.append(temp)
+
+        return imgs_out
 
 def main():
     home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
