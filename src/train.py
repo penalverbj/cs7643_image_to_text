@@ -37,6 +37,7 @@ def train(dataset: str = 'coco'):
         valid_data_loader = DataLoader(dataset=coco_valid, batch_size=BATCH_SIZE, collate_fn=lambda x: x )
 
     elif dataset == 'diffusion_db':
+        # NOTE: set this db_type to something like 100k or 500k during real training
         diffusion_db = get_diffusion_db_train_test_valid_dataset(db_type="2m_random_10k")
         diffusion_db.set_format(type='torch', columns=['pixel_values', 'prompt'])
         train_data_loader = DataLoader(dataset=diffusion_db['train'], batch_size=BATCH_SIZE)
@@ -59,7 +60,15 @@ def train(dataset: str = 'coco'):
         epoch_loss = 0
 
         for batch_id, batch in enumerate(tqdm(train_data_loader)):
-            print(batch)
+            print(batch_id)
+
+            batch_targets = batch['prompt']
+
+            if dataset == 'coco':
+                batch_images = batch['image']
+            
+            if dataset == 'diffusion_db':
+                batch_images = batch['pixel_values']
 
 
 if __name__ == "__main__":

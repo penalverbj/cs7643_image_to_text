@@ -57,7 +57,7 @@ def get_diffusion_db_train_test_valid_dataset(
     # any transforms used here should be done only once per training session, not once
     # per epoch. https://huggingface.co/docs/datasets/image_process
     def transforms(examples):
-        examples['pixel_values'] = [image.convert("RGB").resize((100,100)) for image in examples["image"]]
+        examples['pixel_values'] = [image.convert("RGB").resize(img_size) for image in examples["image"]]
         return examples
 
     diffusion_db_train_testvalid = diffusion_db['train'].train_test_split(test_size=test_set_size)
@@ -85,4 +85,4 @@ if __name__ == "__main__":
     for key, value in sample.items():
         print(f"\t{key}: {value}")
 
-    sample['image'].show()
+    sample['pixel_values'].show()
