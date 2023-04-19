@@ -8,7 +8,6 @@ class Encoder(nn.Module):
     ViT encoder based on TinyViT pre-trained model
     Please see https://github.com/microsoft/Cream/tree/main/TinyViT for details
     """
-
     def __init__(self, hidden_dim=768):
         super(Encoder, self).__init__()
         home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
@@ -27,8 +26,12 @@ class Encoder(nn.Module):
         # CAUTION: This is a naive implementation and we may need to replace more than just the head
         self.hidden_dim = hidden_dim
         self.model.head = nn.Linear(in_features=576, out_features=self.hidden_dim, bias=True)
-        
 
     def forward(self, X):
         out = self.model(X)
         return out
+
+
+if __name__ == "__main__":
+    model = Encoder()
+    print(f"{model=}")

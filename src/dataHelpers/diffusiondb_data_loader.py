@@ -2,7 +2,6 @@ from typing import Literal, get_args
 from datasets import load_dataset, DatasetDict
 
 DATASET_SHUFFLE_SEED = 42
-TEST_SET_SIZE = 0.1
 
 _DIFFUSION_DB_TYPES = Literal[
     "2m_random_1k",
@@ -26,8 +25,22 @@ _DIFFUSION_DB_TYPES = Literal[
 
 def get_diffusion_db_train_test_valid_dataset(
     db_type: _DIFFUSION_DB_TYPES = "2m_random_1k",
-    test_set_size: float = TEST_SET_SIZE,
+    test_set_size: float = 0.1,
 ) -> DatasetDict:
+    """TODO
+
+    For use in a PyTorch `torch.DataLoader`, see this resource:
+    https://huggingface.co/docs/datasets/v1.3.0/torch_tensorflow.html
+
+    Call the built-in `set_format` method to bring the data into Tensor format.
+
+    :param db_type: _description_, defaults to "2m_random_1k"
+    :type db_type: _DIFFUSION_DB_TYPES, optional
+    :param test_set_size: _description_, defaults to 0.1
+    :type test_set_size: float, optional
+    :return: _description_
+    :rtype: DatasetDict
+    """
     options = get_args(_DIFFUSION_DB_TYPES)
     assert db_type in options, f"'{db_type}' is not in {options}"
 

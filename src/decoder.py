@@ -60,3 +60,8 @@ class Decoder(nn.Module):
         # out_seq = self.tokenizer.decode(beam_output[0], skip_special_tokens=True)
         # Return language tokens
         return beam_output[0]
+
+
+if __name__ == "__main__":
+    model = Decoder()
+    print(f"{model=}")
