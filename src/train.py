@@ -22,6 +22,12 @@ VALID_DATASETS = ['coco', 'diffusion_db']
 
 
 def train(dataset: str = 'coco'):
+    """Main CS7643 awesomest group training loop.
+
+    :param dataset: Which dataset to train on ('coco' or 'diffusion_db'), defaults to 'coco'
+    :type dataset: str, optional
+    :raises ValueError: when dataset is not one of 'coco' or 'diffusion_db'
+    """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if dataset == 'coco':
@@ -32,10 +38,10 @@ def train(dataset: str = 'coco'):
 
     elif dataset == 'diffusion_db':
         diffusion_db = get_diffusion_db_train_test_valid_dataset(db_type="2m_random_10k")
-        diffusion_db.set_format(type='torch', columns=['image', 'prompt'])
+        diffusion_db.set_format(type='torch', columns=['pixel_values', 'prompt'])
         train_data_loader = DataLoader(dataset=diffusion_db['train'], batch_size=BATCH_SIZE)
         valid_data_loader = DataLoader(dataset=diffusion_db['valid'], batch_size=BATCH_SIZE)
-    
+
     else:
         raise ValueError(f"'{dataset}' not valid. Must be one of {VALID_DATASETS}.")
 
@@ -47,10 +53,12 @@ def train(dataset: str = 'coco'):
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     for epoch in range(EPOCHS):
-        print(f"{epoch=}")
+        print(f"==============================================")
+        print(f"EPOCH: {epoch}")
+        print(f"==============================================")
         epoch_loss = 0
 
-        for batch in enumerate(tqdm(train_data_loader)):
+        for batch_id, batch in enumerate(tqdm(train_data_loader)):
             print(batch)
 
 

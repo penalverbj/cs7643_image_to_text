@@ -13,13 +13,15 @@ def get_coco_train_dataset(
     img_size: tuple = (512, 512),
     do_transform_from_PIL_to_tensor: bool = True
 ) -> dset.CocoCaptions:
-    """_summary_
+    """Gets a COCO training datset of uniform image size.
 
-    :param img_size: _description_, defaults to (512, 512)
+    https://pytorch.org/vision/main/generated/torchvision.datasets.CocoCaptions.html
+
+    :param img_size: image size in (w, h) to make all images uniform, defaults to (512, 512)
     :type img_size: tuple, optional
-    :param do_transform_from_PIL_to_tensor: _description_, defaults to True
+    :param do_transform_from_PIL_to_tensor: converts to pytorch tensor, defaults to True
     :type do_transform_from_PIL_to_tensor: bool, optional
-    :return: _description_
+    :return: COCO dataset compatible with pytorch DataLoader
     :rtype: dset.CocoCaptions
     """
     transform_list = [transforms.Resize(img_size)]
@@ -38,13 +40,15 @@ def get_coco_valid_dataset(
     img_size: tuple = (512, 512),
     do_transform_from_PIL_to_tensor: bool = True,
 ) -> dset.CocoCaptions:
-    """_summary_
+    """Gets a COCO validation datset of uniform image size.
 
-    :param img_size: _description_, defaults to (512, 512)
+    https://pytorch.org/vision/main/generated/torchvision.datasets.CocoCaptions.html
+
+    :param img_size: image size in (w, h) to make all images uniform, defaults to (512, 512)
     :type img_size: tuple, optional
-    :param do_transform_from_PIL_to_tensor: _description_, defaults to True
+    :param do_transform_from_PIL_to_tensor: converts to pytorch tensor, defaults to True
     :type do_transform_from_PIL_to_tensor: bool, optional
-    :return: _description_
+    :return: COCO dataset compatible with pytorch DataLoader
     :rtype: dset.CocoCaptions
     """
     transform_list = [transforms.Resize(img_size)]
