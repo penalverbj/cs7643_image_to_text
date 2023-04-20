@@ -575,7 +575,7 @@ class TinyViT(nn.Module):
             layer = self.layers[i]
             x = layer(x)
 
-        x = x.mean(1)
+        # x = x.mean(1)
 
         return x
 
