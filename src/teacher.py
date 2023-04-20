@@ -4,7 +4,7 @@ import requests
 from PIL import Image
 # from datasets import load_dataset
 from dataHelpers import cocoLoader
-
+import csv
 from transformers import GPT2TokenizerFast, ViTImageProcessor, VisionEncoderDecoderModel
 
 class Teacher():
@@ -16,14 +16,28 @@ class Teacher():
         self.data_set = data_set
 
     def process_batch(self):
-        pass
+        loader = cocoLoader.cocoLoader(
+            "C:/Users\penal\DeepLearning/final\data\coco/annotations\captions_train2017.json", "data/coco/train2017")
+        img = loader.get_single_image()
+        f = open('C:/Users\penal\DeepLearning/final\src/teacherResults.csv', 'w')
+        writer = csv.writer(f)
+        writer.writerow(["img_id", "generated_caption"])
+        i = 0
+        print("Teacher process started")
+        while (img != -1):
+            img_id = str(img['annotations'][0]['image_id'])
+            pixel_values = self.get_pixels_single_image(img['image'])
+            caption = self.caption_single_image(pixel_values)
+            writer.writerow([img_id, caption])
+            if (i % 50 == 0):
+                print(f"{i} Images Completed")
+            i += 1
+            img = loader.get_single_image()
 
+        f.close()
+        return "Teacher process DONE"
     def load_data(self):
-        home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
-        sys.path.append(home_dir + '/models/TinyViT')
-        loader = cocoLoader.cocoLoader("C:/Users\penal\DeepLearning/final\data\coco/annotations\captions_train2017.json", "data/coco/train2017")
-        self.data_set = loader.get_all_imgs()
-        print("DONE LOADING")
+        pass
     def get_pixels_single_image(self, image):
         # url = "http://images.cocodataset.org/val2017/000000039769.jpg"
         # image = Image.open(requests.get(url, stream=True).raw)
@@ -37,14 +51,16 @@ class Teacher():
     def caption_single_image(self, pixel_values):
         generated_ids = self.model.generate(pixel_values)
         generated_text = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        print(generated_text)
+        # print(generated_text)
+        return generated_text
 
 
 def test():
     teacher = Teacher()
-    teacher.load_data()
+    # teacher.load_data()
     # pixel_values = teacher.get_pixels_single_image()
     # teacher.caption_single_image(pixel_values)
+    teacher.process_batch()
 
 
 if __name__ == "__main__":

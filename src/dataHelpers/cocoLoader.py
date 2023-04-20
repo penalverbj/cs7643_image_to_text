@@ -62,13 +62,33 @@ class cocoLoader:
             imgs_out.append(temp)
 
         return imgs_out
+    def get_single_image(self):
+        img_ids = self.parser.get_imgIds()
+        if (self.current_idx >= len(img_ids)):
+            return -1
 
+        im = img_ids[self.current_idx]
+        image = Image.open(f"{self.home_dir}/{self.coco_images_dir}/{str(im).zfill(12)}.jpg")
+        ann_ids = self.parser.get_annIds(im)
+        annotations = self.parser.load_anns(ann_ids)
+        self.current_idx = self.current_idx + 1
+        temp = {
+                "image": image,
+                "ann_ids": ann_ids,
+                "annotations": annotations
+            }
+        return temp
 def main():
     home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
     sys.path.append(home_dir + '/models/TinyViT')
     loader = cocoLoader(f"{home_dir}/data\coco/annotations/captions_train2017.json", "data/coco/train2017")
-    imgs = loader.get_imgs(1, random=True)
-    print(imgs[0])
+    # imgs = loader.get_imgs(1, random=False)
+    # print(imgs[0])
+    print(loader.current_idx)
+    loader.get_single_image()
+    print(loader.current_idx)
+    loader.get_single_image()
+
 
 if __name__ == "__main__":
     main()
