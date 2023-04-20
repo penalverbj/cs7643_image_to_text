@@ -20,21 +20,16 @@ class ImageCap(nn.Module):
                                      num_beams=self.num_beams)
         
     def forward(self, X):
-        # TODO: Error. Encoder output shape doesn't match what's expected by decoder
-        # encoder currently outputs (1, hidden_dim)
-        # while decoder wants (1, n, hidden_dim), where n can be anything
-        # This because the output of the encoder was originally a vector for classification
-        # While while decoder is expecting an embeddeding for each nth word
-        # How do we get the last hidden state of TinyViT to pass into decoder?
-        # With huggingface output, this is easy, but idk for custom model
-        # This is the equiv of getting the hidden state for each image patch
-        # Do we use hooks??
-        # https://www.kaggle.com/code/rhtsingh/utilizing-transformer-representations-efficiently
-        # Wait! See line 578 of https://github.com/microsoft/Cream/blob/main/TinyViT/models/tiny_vit.py
-        # We may just need to get rid of that mean!
-        # encoder_model.model.forward_features(pixel_values)
-        # Plan: Create another method in tiny_vit.py that is the same as foward_features, but does not
-        # do the mean!
+        """ 
+        Encoder output shape from TinyViT doesn't match what's expected by decoder by default
+        This is because TinyViT was originally an image classification model
+        
+        At the end of the attention modules, TinyViT performs an average over all hidden states
+        to produce a single hidden state that is then used for classification
+        
+        To prevent this averaging over hidden states,
+        line 578 of models/TinyViT/models/tiny_vit.py was commented out
+        """
         out = self.encoder_model.forward(X)
         out = self.decoder_model.forward(out)
         return out
