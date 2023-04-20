@@ -72,12 +72,16 @@ class cocoLoader:
         ann_ids = self.parser.get_annIds(im)
         annotations = self.parser.load_anns(ann_ids)
         self.current_idx = self.current_idx + 1
+
         temp = {
                 "image": image,
                 "ann_ids": ann_ids,
                 "annotations": annotations
             }
+        # print(temp)
         return temp
+    def increment_current_index(self):
+        self.current_idx += 1
 def main():
     home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
     sys.path.append(home_dir + '/models/TinyViT')
@@ -86,8 +90,8 @@ def main():
     # print(imgs[0])
     print(loader.current_idx)
     loader.get_single_image()
-    print(loader.current_idx)
-    loader.get_single_image()
+    # print(loader.current_idx)
+    # loader.get_single_image()
 
 
 if __name__ == "__main__":

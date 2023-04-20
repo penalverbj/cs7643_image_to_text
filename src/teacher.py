@@ -23,16 +23,24 @@ class Teacher():
         writer = csv.writer(f)
         writer.writerow(["img_id", "generated_caption"])
         i = 0
+        invalid_ids = []
         print("Teacher process started")
         while (img != -1):
             img_id = str(img['annotations'][0]['image_id'])
-            pixel_values = self.get_pixels_single_image(img['image'])
-            caption = self.caption_single_image(pixel_values)
-            writer.writerow([img_id, caption])
-            if (i % 50 == 0):
-                print(f"{i} Images Completed")
-            i += 1
-            img = loader.get_single_image()
+            try:
+                pixel_values = self.get_pixels_single_image(img['image'])
+                caption = self.caption_single_image(pixel_values)
+                writer.writerow([img_id, caption])
+                if (i % 50 == 0):
+                    print(f"{i} Images Completed")
+                i += 1
+            except ValueError:
+                invalid_ids.append(img_id)
+                loader.increment_current_index()
+                print(f"error with {img_id}")
+                pass
+            finally:
+                img = loader.get_single_image()
 
         f.close()
         return "Teacher process DONE"
