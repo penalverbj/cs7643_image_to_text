@@ -32,6 +32,15 @@ class Encoder(nn.Module):
         return out
 
 
+    def unfreeze(self):
+        for param in self.model.patch_embed.parameters():
+            param.requires_grad = True
+        
+        for param in self.model.layers[0].parameters():
+            param.requires_grad = True
+
+
+
 if __name__ == "__main__":
     model = Encoder()
     print(f"{model=}")

@@ -62,6 +62,11 @@ class Decoder(nn.Module):
         return beam_output[0]
 
 
+    def unfreeze(self):
+        for param in self.model.parameters():
+            param.requires_grad = True
+
+
 if __name__ == "__main__":
     model = Decoder()
     print(f"{model=}")
