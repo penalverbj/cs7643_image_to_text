@@ -13,7 +13,6 @@ class Teacher():
     def __init__(self, data_set="", captioning_model="nlpconnect/vit-gpt2-image-captioning"):
         # load a fine-tuned image captioning model and corresponding tokenizer and image processor
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # self.model = VisionEncoderDecoderModel.from_pretrained(captioning_model)
         self.model = VisionEncoderDecoderModel.from_pretrained(captioning_model).to(self.device)
         self.tokenizer = GPT2TokenizerFast.from_pretrained(captioning_model)
         self.image_processor = ViTImageProcessor.from_pretrained(captioning_model)
@@ -24,7 +23,7 @@ class Teacher():
     def process_batch(self):
         json_path = glob(self.home_dir + "/data/coco/annotations/captions_train2017.json")[0]
         data_path = "/data/coco/train2017"
-        csv_path = glob(self.home_dir + "/src/teacherResults.csv")[0]
+        csv_path = glob(self.home_dir + "/data/teacherResults.csv")[0]
         loader = cocoLoader.cocoLoader(json_path, data_path)
         img = loader.get_single_image()
         f = open(csv_path, 'w')
