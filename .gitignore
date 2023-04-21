@@ -1,6 +1,9 @@
 # Local data files
 data/diffusiondb_huggingface/
 data/coco/
+data/teacherHead.csv
+data/teacherHidden.csv
+data/teacher_out/
 models/TinyViT
 
 # Byte-compiled / optimized / DLL files
