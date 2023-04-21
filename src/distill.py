@@ -39,6 +39,11 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5)
     # TODO: Create teacher embeddings
     # TODO: Question: what kind of loss even makes sense? Is cosine similar really the best thing?
     # TODO: On that note, what output should be passed to the loss? Embeddings, categorical dist, tokens?
+    # Resources:
+    # https://alexnim.com/coding-projects-knowledge-distillation.html
+    # https://blog.floydhub.com/knowledge-distillation/
+    #   (1 - alpha) * cross_entropy_loss wrt hard labels +  alpha * KL-Div wrt soft teacher labels
+    # https://arxiv.org/pdf/1910.01108.pdf Section 2
 
 
     for epoch in range(EPOCHS):
