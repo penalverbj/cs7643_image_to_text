@@ -6,20 +6,28 @@ from PIL import Image
 from dataHelpers import cocoLoader
 import csv
 from transformers import GPT2TokenizerFast, ViTImageProcessor, VisionEncoderDecoderModel
+from glob import glob
+import torch
 
 class Teacher():
     def __init__(self, data_set="", captioning_model="nlpconnect/vit-gpt2-image-captioning"):
         # load a fine-tuned image captioning model and corresponding tokenizer and image processor
-        self.model = VisionEncoderDecoderModel.from_pretrained(captioning_model)
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.model = VisionEncoderDecoderModel.from_pretrained(captioning_model)
+        self.model = VisionEncoderDecoderModel.from_pretrained(captioning_model).to(self.device)
         self.tokenizer = GPT2TokenizerFast.from_pretrained(captioning_model)
         self.image_processor = ViTImageProcessor.from_pretrained(captioning_model)
         self.data_set = data_set
+        self.home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
+
 
     def process_batch(self):
-        loader = cocoLoader.cocoLoader(
-            "C:/Users\penal\DeepLearning/final\data\coco/annotations\captions_train2017.json", "data/coco/train2017")
+        json_path = glob(self.home_dir + "/data/coco/annotations/captions_train2017.json")[0]
+        data_path = "/data/coco/train2017"
+        csv_path = glob(self.home_dir + "/src/teacherResults.csv")[0]
+        loader = cocoLoader.cocoLoader(json_path, data_path)
         img = loader.get_single_image()
-        f = open('C:/Users\penal\DeepLearning/final\src/teacherResults.csv', 'w')
+        f = open(csv_path, 'w')
         writer = csv.writer(f)
         writer.writerow(["img_id", "generated_caption"])
         i = 0
@@ -53,7 +61,7 @@ class Teacher():
         # imgs = loader.get_imgs(1, random=True)
         # image = imgs[0]['image']
         # print(imgs[0]['annotations'])
-        pixel_values = self.image_processor(image, return_tensors="pt").pixel_values
+        pixel_values = self.image_processor(image, return_tensors="pt").pixel_values.to(self.device)
         return pixel_values
 
     def caption_single_image(self, pixel_values):
