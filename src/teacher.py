@@ -28,10 +28,13 @@ class Teacher():
         json_path = glob(self.home_dir + "/data/coco/annotations/captions_train2017.json")[0]
         data_path = "/data/coco/train2017"
         csv_path = glob(self.home_dir + "/data/teacherResults.csv")[0]
+        csv_hidden_path = glob(self.home_dir + "/data/teacherHidden.csv")[0]
         loader = cocoLoader.cocoLoader(json_path, data_path)
         img = loader.get_single_image()
         f = open(csv_path, 'w')
+        f_hidden = open(csv_hidden_path, 'w')
         writer = csv.writer(f)
+        writer_hidden = csv.writer(f_hidden)
         writer.writerow(["img_id", "generated_caption"])
         i = 0
         invalid_ids = []
@@ -42,6 +45,7 @@ class Teacher():
                 pixel_values = self.get_pixels_single_image(img['image'])
                 caption = self.caption_single_image(pixel_values)
                 writer.writerow([img_id, caption])
+                writer_hidden.writerow(self.decoder_out_hidden[0][0].to('cpu').numpy())
                 if (i % 50 == 0):
                     print(f"{i} Images Completed")
                 i += 1
@@ -54,6 +58,7 @@ class Teacher():
                 img = loader.get_single_image()
 
         f.close()
+        f_hidden.close()
         return "Teacher process DONE"
     def load_data(self):
         pass
