@@ -8,6 +8,7 @@ import csv
 from transformers import GPT2TokenizerFast, ViTImageProcessor, VisionEncoderDecoderModel
 from glob import glob
 import torch
+from collections import OrderedDict 
 
 class Teacher():
     def __init__(self, data_set="", captioning_model="nlpconnect/vit-gpt2-image-captioning"):
@@ -19,9 +20,10 @@ class Teacher():
         self.data_set = data_set
         self.home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
 
-        self.decoder_out_hidden = None
-        # Hook the 2nd to last layer to save decoder output hidden state
-        self.model.decoder.transformer.register_forward_hook(self.forward_hook())
+        self.decoder_out = OrderedDict()
+        # Hook last 2 layers to save decoder output hidden state and lm_head to self.decoder_out
+        self.model.decoder.transformer.register_forward_hook(self.forward_hook('decoder_out_hidden'))
+        self.model.decoder.lm_head.register_forward_hook(self.forward_hook('decoder_out_head'))
 
 
     def process_batch(self):
@@ -78,10 +80,11 @@ class Teacher():
         # print(generated_text)
         return generated_text
 
-    def forward_hook(self):
+    def forward_hook(self, layer_name):
         def hook(module, input, output):
-            self.decoder_out_hidden = output[0]
+            self.decoder_out[layer_name] = output[0]
         return hook
+    
 
 
 def test():

@@ -2,6 +2,7 @@ import torch.nn as nn
 
 from encoder import Encoder
 from decoder import Decoder
+from collections import OrderedDict 
 
 class ImageCap(nn.Module):
     """
@@ -19,9 +20,10 @@ class ImageCap(nn.Module):
                                      max_outseq_len=self.max_outseq_len,
                                      num_beams=self.num_beams)
         
-        self.decoder_out_hidden = None
-        # Hook the 2nd to last layer to save decoder output hidden state
-        self.decoder_model.model.transformer.register_forward_hook(self.forward_hook())
+        self.decoder_out = OrderedDict()
+        # Hook last 2 layers to save decoder output hidden state and lm_head to self.decoder_out
+        self.decoder_model.model.transformer.register_forward_hook(self.forward_hook('decoder_out_hidden'))
+        self.decoder_model.model.lm_head.register_forward_hook(self.forward_hook('decoder_out_head'))
 
         
     def forward(self, X):
@@ -39,9 +41,9 @@ class ImageCap(nn.Module):
         out = self.decoder_model.forward(out)
         return out
     
-    def forward_hook(self):
+    def forward_hook(self, layer_name):
         def hook(module, input, output):
-            self.decoder_out_hidden = output[0]
+            self.decoder_out[layer_name] = output[0]
         return hook
 
     
