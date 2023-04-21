@@ -19,6 +19,10 @@ class Teacher():
         self.data_set = data_set
         self.home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
 
+        self.decoder_out_hidden = None
+        # Hook the 2nd to last layer to save decoder output hidden state
+        self.model.decoder.transformer.register_forward_hook(self.forward_hook())
+
 
     def process_batch(self):
         json_path = glob(self.home_dir + "/data/coco/annotations/captions_train2017.json")[0]
@@ -68,6 +72,11 @@ class Teacher():
         generated_text = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
         # print(generated_text)
         return generated_text
+
+    def forward_hook(self):
+        def hook(module, input, output):
+            self.decoder_out_hidden = output[0]
+        return hook
 
 
 def test():

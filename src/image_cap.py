@@ -19,6 +19,11 @@ class ImageCap(nn.Module):
                                      max_outseq_len=self.max_outseq_len,
                                      num_beams=self.num_beams)
         
+        self.decoder_out_hidden = None
+        # Hook the 2nd to last layer to save decoder output hidden state
+        self.decoder_model.model.transformer.register_forward_hook(self.forward_hook())
+
+        
     def forward(self, X):
         """ 
         Encoder output shape from TinyViT doesn't match what's expected by decoder by default
@@ -33,3 +38,13 @@ class ImageCap(nn.Module):
         out = self.encoder_model.forward(X)
         out = self.decoder_model.forward(out)
         return out
+    
+    def forward_hook(self):
+        def hook(module, input, output):
+            self.decoder_out_hidden = output[0]
+        return hook
+
+    
+if __name__ == "__main__":
+    model = ImageCap()
+    print(f"{model=}")
