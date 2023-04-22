@@ -63,9 +63,10 @@ def train(dataset: str = 'coco'):
 
         for batch_id, data in enumerate(tqdm(train_data_loader)):
             if dataset == 'coco':
-                # NOTE this is broken. we're getting batch data as a list.
-                batch_images = [d[0].to(device) for d in data]
-                batch_prompts = [d[1] for d in data]
+                batch_images_list = [d[0] for d in data]
+                batch_prompts_list = [d[1] for d in data]
+
+                batch_images = torch.stack(batch_images_list).to(device)
             
             if dataset == 'diffusion_db':
                 batch_images = data['pixel_values'].to(device)
@@ -79,7 +80,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--dataset',
         type=str,
-        default=VALID_DATASETS[0],
+        default=VALID_DATASETS[1],
         choices=VALID_DATASETS,
         help="Which dataset to train on."
     )
