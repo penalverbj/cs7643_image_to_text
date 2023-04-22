@@ -154,6 +154,7 @@ class DistillDataset(Dataset):
         img_path = self.jpg_list[idx]
         img_id = self.img_id_list[idx]
         # TODO: resize images to all be same size
+        # https://discuss.pytorch.org/t/runtimeerror-stack-expects-each-tensor-to-be-equal-size-but-got-3-224-224-at-entry-0-and-3-224-336-at-entry-3/87211
         image = read_image(img_path).to(self.device)
 
         teacher_values = self.teacher_hidden[idx, :]
