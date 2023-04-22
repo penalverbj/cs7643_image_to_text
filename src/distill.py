@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 import torch
 import torch.optim as optim
+from torch.utils.data import DataLoader
 from ignite.metrics import Rouge
 
 from tqdm import tqdm
@@ -34,10 +35,11 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
-    # Load teacher outputs
-    home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
-    csv_path = glob(home_dir + "/data/teacherResults.csv")[0]
-    teacher_labels = np.genfromtxt(csv_path, delimiter=',')
+    # Load teacher decoder last hidden state values (prior to language head)
+    teacher_hidden = load_teacher_data(device=device)
+
+    # TODO: Load coco training images along with corresponding annotations
+    # and created batched dataset (see torch.utils.data.DataLoader)
 
     # self.tl_alpha = tl_alpha
     # self.tl_beta = tl_beta
@@ -93,6 +95,17 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
             epoch_loss += batch_loss
 
             print("success")
+
+
+# Load teacher decoder last hidden state values into memory
+def load_teacher_data(device="cpu"):
+    home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
+    hidden_csv = glob(home_dir + "/data/teacherHidden.csv")[0]
+
+    # Store teacher decoder last hidden state values
+    hidden_values = np.genfromtxt(hidden_csv, delimiter=',')
+    hidden_values = torch.from_numpy(hidden_values).to(device)
+    return hidden_values
 
 
 if __name__ == "__main__":
