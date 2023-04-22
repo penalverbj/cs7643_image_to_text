@@ -2,7 +2,8 @@ from argparse import ArgumentParser
 
 import torch
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
+from torchvision.io import read_image
 from ignite.metrics import Rouge
 
 from tqdm import tqdm
@@ -11,6 +12,8 @@ from image_cap import ImageCap
 import git
 from glob import glob
 import numpy as np
+
+from pycocotools.coco import COCO
 
 # Hyperparameters
 BATCH_SIZE = 256
@@ -35,11 +38,10 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
-    # Load teacher decoder last hidden state values (prior to language head)
-    teacher_hidden = load_teacher_data(device=device)
-
-    # TODO: Load coco training images along with corresponding annotations
-    # and created batched dataset (see torch.utils.data.DataLoader)
+    # Load data
+    training_data = DistillDataset(device=device)
+    train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True)
+    # images, teacher_values, coco_annotations = next(iter(train_dataloader))
 
     # self.tl_alpha = tl_alpha
     # self.tl_beta = tl_beta
@@ -56,6 +58,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
     #   (1 - alpha) * cross_entropy_loss wrt hard labels +  alpha * KL-Div wrt soft teacher labels
     # https://arxiv.org/pdf/1910.01108.pdf Section 2
 
+    # TODO: 
     def ideal_label(self, id_):
         # since we have 5 candidate teacher embeddings, a few options here.
         # we could try to minimize against the closest embedding
@@ -98,15 +101,70 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
 
 
 # Load teacher decoder last hidden state values into memory
+# Assuming rows in teacherHidden.csv correspond 1-to-1 with teacherResults.csv
 def load_teacher_data(device="cpu"):
     home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
-    hidden_csv = glob(home_dir + "/data/teacherHidden.csv")[0]
+    hidden_csv = glob(home_dir + "/data/teacher_out/teacherHidden.csv")[0]
 
     # Store teacher decoder last hidden state values
     hidden_values = np.genfromtxt(hidden_csv, delimiter=',')
     hidden_values = torch.from_numpy(hidden_values).to(device)
-    return hidden_values
 
+    # Next store teacher text and associations with images
+    # I'm doing it this way because file names have been changed
+    # and output string have ',' while being stored in csv file
+    results_csv = glob(home_dir + "/data/teacher_out/teacherResults.csv")[0]
+    img_id_list = []
+    jpg_list = []
+    annotation_list = []
+    with open(results_csv, 'r') as f:
+        for line in f:
+            try:
+                line = line.strip()
+                cut_loc = line.find(',')
+                img_id = line[0:cut_loc]
+                img_id_list.append(int(img_id))
+                jpg_name = home_dir + '/data/coco/train2017/' + '0'*(12-len(img_id)) + img_id + '.jpg'
+                annotation = line[cut_loc+1:]
+                jpg_list.append(jpg_name)
+                annotation_list.append(annotation)
+                
+            # Skip header
+            except ValueError:
+                pass      
+
+    return hidden_values, img_id_list, jpg_list, annotation_list
+
+
+class DistillDataset(Dataset):
+    """
+    Create a custom pytorch dataset class to facilitate batch training
+    https://pytorch.org/tutorials/beginner/basics/data_tutorial.html
+    """
+    def __init__(self, coco_json="./data/coco/annotations/captions_train2017.json", device="cpu"):
+        print("Loading images and annotations for distillation")
+        self.device = device
+        self.teacher_hidden, self.img_id_list, self.jpg_list, self.teacher_ann = load_teacher_data(device=self.device)
+        self.coco = COCO(coco_json)
+
+    def __len__(self):
+        return self.teacher_hidden.shape[0]
+    
+    def __getitem__(self, idx):
+        img_path = self.jpg_list[idx]
+        img_id = self.img_id_list[idx]
+        # TODO: resize images to all be same size
+        image = read_image(img_path).to(self.device)
+
+        teacher_values = self.teacher_hidden[idx, :]
+
+        ann_ids = self.coco.getAnnIds(img_id)
+        coco_annotations = self.coco.loadAnns(ann_ids)
+
+        # TODO: Make coco_annotations into vector?
+        # image, teacher target, "ground truth" target
+        return image, teacher_values, coco_annotations
+    
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="CS7643 Best Group Student Distillation script.")
