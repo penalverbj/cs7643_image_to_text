@@ -88,8 +88,7 @@ $ split teacherHidden.csv teacherHidden.csv.part -b 50m
 $ gzip *
 
 # To unsplit, simply do
-gunzip teacherHidden.csv.part*
-cat teacherHidden.csv.part* > teacherHidden.csv
+zcat teacherHidden.csv.part*.gz > teacherHidden.csv
 ```
 ### Running
 ```
