@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 
 import torch
 import torch.optim as optim
+from ignite.metrics import Rouge
 
 from tqdm import tqdm
 
@@ -28,6 +29,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5)
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1.0e-4)
     optimizer.zero_grad()
+    accuracyMetric = Rouge(variants=["L"], multiref="average")
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 

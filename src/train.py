@@ -9,6 +9,7 @@ from tqdm import tqdm
 from dataHelpers.coco_data_loader import get_coco_train_dataset, get_coco_valid_dataset
 from dataHelpers.diffusiondb_data_loader import get_diffusion_db_train_test_valid_dataset
 from image_cap import ImageCap
+from ignite.metrics import Rouge
 from loss import cosine_similarity_loss
 
 
@@ -50,6 +51,7 @@ def train(dataset: str = 'coco'):
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1.0e-4)
     optimizer.zero_grad()
+    accuracyMetric = Rouge(variants=["L"], multiref="average")
 
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 

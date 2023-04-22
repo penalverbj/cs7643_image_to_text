@@ -11,6 +11,7 @@ dependencies:
   - timm
   - pip
   - typing
+  - pytorch ignite
   - pip:
     - opencv-contrib-python
     - opencv-python
