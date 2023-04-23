@@ -16,9 +16,10 @@ from glob import glob
 import numpy as np
 
 from pycocotools.coco import COCO
+from transformers import AutoConfig, AutoProcessor
 
 # Hyperparameters
-BATCH_SIZE = 256
+BATCH_SIZE = 64
 EPOCHS = 20
 LEARNING_RATE = 1.0e-3
 
@@ -42,7 +43,8 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
 
     # Load data
     training_data = DistillDataset(device=device)
-    train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True)
+    train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True,)
+    # train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True, collate_fn=lambda x: x)
 
     # self.tl_alpha = tl_alpha
     # self.tl_beta = tl_beta
@@ -92,11 +94,13 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
         for batch_id, data in enumerate(tqdm(train_dataloader)):
             batch_loss = 0
             # TODO: Implement forward pass, calculate loss, and backward pass
+            # batch_images_list = [d[0] for d in data]
+            # batch_images = torch.stack(batch_images_list).to(device)
             images = data[0].to(device)
-            teacher_values = data[1]
-            annotations = data[2]
+            # teacher_values = [d[1] for d in data]
+            # annotations = data[2]
 
-            out = model.forward(images)
+            out = model.forward(images.float())
             for image in out:
                 batch_loss += triple_loss(out)
             batch_loss.backward()
@@ -148,17 +152,20 @@ class DistillDataset(Dataset):
     Create a custom pytorch dataset class to facilitate batch training
     https://pytorch.org/tutorials/beginner/basics/data_tutorial.html
     """
+    # TARGET_MODEL_CONFIG =  AutoConfig.from_pretrained("julien-c/tinyvit_21M_imagenet_224")
+
     def __init__(
         self,
         coco_json="./data/coco/annotations/captions_train2017.json",
         device="cpu",
-        img_size=(512, 512),
+        img_size=(224, 224),
     ):
         print("Loading images and annotations for distillation")
         self.device = device
         self.teacher_hidden, self.img_id_list, self.jpg_list, self.teacher_ann = load_teacher_data(device=self.device)
         self.coco = COCO(coco_json)
         self.transforms = transforms.Compose([transforms.Resize(img_size)])
+        # self.preprocessor = AutoProcessor.from_config(self.TARGET_MODEL_CONFIG)
 
     def __len__(self):
         return self.teacher_hidden.shape[0]
@@ -166,14 +173,15 @@ class DistillDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.jpg_list[idx]
         img_id = self.img_id_list[idx]
-        # TODO: resize images to all be same size
-        # https://discuss.pytorch.org/t/runtimeerror-stack-expects-each-tensor-to-be-equal-size-but-got-3-224-224-at-entry-0-and-3-224-336-at-entry-3/87211
         image = self.transforms(read_image(img_path))
+        # image = self.preprocessor(image)
 
         teacher_values = self.teacher_hidden[idx, :]
 
         ann_ids = self.coco.getAnnIds(img_id)
         coco_annotations = self.coco.loadAnns(ann_ids)
+        if len(coco_annotations) > 5:
+            coco_annotations = coco_annotations[:5]
 
         # TODO: Make coco_annotations into vector?
         # image, teacher target, "ground truth" target

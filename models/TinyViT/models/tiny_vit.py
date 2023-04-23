@@ -48,6 +48,19 @@ class DropPath(TimmDropPath):
     def __init__(self, drop_prob=None):
         super().__init__(drop_prob=drop_prob)
         self.drop_prob = drop_prob
+    
+    # def forward(self, x):
+    #     if not self.training or self.drop_prob == 0.0:
+    #         return x
+    #     keep_prob = 1.0 - self.drop_prob
+    #     mask = torch.FloatTensor(x.size(0), 1, 1, 1).bernoulli_(keep_prob).to(x.device)
+    #     return x / keep_prob * mask
+
+    def scale_by_keep(self, x):
+        if not self.training or self.drop_prob == 0.0:
+            return x
+        keep_prob = 1.0 - self.drop_prob
+        return x / keep_prob
 
     def __repr__(self):
         msg = super().__repr__()

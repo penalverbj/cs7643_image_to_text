@@ -37,9 +37,9 @@ class ImageCap(nn.Module):
         To prevent this averaging over hidden states,
         line 578 of models/TinyViT/models/tiny_vit.py was commented out
         """
-        out = self.encoder_model.forward(X)
-        out = self.decoder_model.forward(out)
-        return out
+        encoder_out = self.encoder_model.forward(X)
+        decoder_out = self.decoder_model.forward(encoder_out)
+        return decoder_out
     
     def forward_hook(self, layer_name):
         def hook(module, input, output):
