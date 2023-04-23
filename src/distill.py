@@ -19,7 +19,7 @@ from pycocotools.coco import COCO
 from transformers import AutoConfig, AutoProcessor
 
 # Hyperparameters
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 EPOCHS = 20
 LEARNING_RATE = 1.0e-3
 

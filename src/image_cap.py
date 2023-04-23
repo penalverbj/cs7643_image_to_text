@@ -16,6 +16,11 @@ class ImageCap(nn.Module):
         self.num_beams = num_beams
 
         self.encoder_model = Encoder(hidden_dim=self.hidden_dim)
+
+        # NOTE: magic number which is 7*7*hidden_dim, where 7*7 is the last
+        # window size of TinyViT
+        self.projection_layer = nn.Linear(37632, hidden_dim)
+
         self.decoder_model = Decoder(hidden_dim=self.hidden_dim,
                                      max_outseq_len=self.max_outseq_len,
                                      num_beams=self.num_beams)
@@ -38,7 +43,8 @@ class ImageCap(nn.Module):
         line 578 of models/TinyViT/models/tiny_vit.py was commented out
         """
         encoder_out = self.encoder_model.forward(X)
-        decoder_out = self.decoder_model.forward(encoder_out)
+        projection = self.projection_layer(encoder_out.flatten(start_dim=1))
+        decoder_out = self.decoder_model.forward(projection)
         return decoder_out
     
     def forward_hook(self, layer_name):
