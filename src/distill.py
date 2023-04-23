@@ -24,7 +24,7 @@ EPOCHS = 20
 LEARNING_RATE = 1.0e-3
 
 
-def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
+def distill(hidden_dim: int = 768, max_outseq_len: int = 25, num_beams: int = 5,
             tl_alpha: int = 1, tl_beta: int = 1, tl_gamma: int = 0):
     """
     This will call our image_cap.py and the forward-pass outputs of teacher.py to perform knowledge distillation
@@ -43,7 +43,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     # Load data
-    training_data = DistillDataset(device=device, tokenizer=tokenizer)
+    training_data = DistillDataset(device=device, tokenizer=tokenizer,)
     train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True,)
     # train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True, collate_fn=lambda x: x)
 
@@ -98,7 +98,12 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
             images = data[0]
             # teacher_values = [d[1] for d in data]
             target_embeddings = data[2]
+            # target_embeddings.size = 16, 5, 1024, only with max_length padding strategy,
+            # which is subject to change
+            # TODO: loss function needs to be called relative to each of these targets
 
+            # out.size = (batch_size, vocab_size)
+            # need the attention outputs - model.decoder_out['decoder_out_hidden'], size = (batch_size, hidden_dim)
             out = model.forward(images)
             for image in out:
                 batch_loss += triple_loss(out)
@@ -164,6 +169,7 @@ class DistillDataset(Dataset):
         self.coco = COCO(coco_json)
         self.transforms = transforms.Compose([transforms.Resize(img_size)])
         self.tokenizer = tokenizer
+        self.tokenizer.pad_token = tokenizer.eos_token
 
     def __len__(self):
         return self.teacher_hidden.shape[0]
@@ -184,8 +190,13 @@ class DistillDataset(Dataset):
         # image, teacher target, "ground truth" target
         coco_tokens = []
         for ann in coco_annotations:
-            tokens = self.tokenizer(ann, return_tensors="pt")
-            coco_tokens.append(tokens['input_ids'][0])
+            tokens = self.tokenizer(
+                ann['caption'],
+                return_tensors="pt",
+                padding='max_length',
+                truncation=True,
+            )
+            coco_tokens.append(tokens['input_ids'])
 
         coco_tokens = torch.cat(coco_tokens)
         return image, teacher_values, coco_tokens
