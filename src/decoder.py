@@ -50,16 +50,19 @@ class Decoder(nn.Module):
 
         Additional args in generate() are used to perform beam search on space of possible sentences
         See https://huggingface.co/blog/how-to-generate
-        """
-        beam_output = self.model.generate(inputs_embeds=X,
-                                        max_length=self.max_outseq_len,
-                                        num_beams=self.num_beams,
-                                        early_stopping=True,
-                                        pad_token_id=self.tokenizer.eos_token_id)
 
+        old that didn't work
+        beam_output = self.model.generate(inputs_embeds=X,
+                                max_length=self.max_outseq_len,
+                                num_beams=self.num_beams,
+                                early_stopping=True,
+                                pad_token_id=self.tokenizer.eos_token_id)
+        """
+        output = self.model(inputs_embeds=X)
+        return output.logits
         # out_seq = self.tokenizer.decode(beam_output[0], skip_special_tokens=True)
         # Return language tokens
-        return beam_output[0]
+        # return beam_output[0]
 
 
     def unfreeze(self):
