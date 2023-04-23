@@ -89,6 +89,9 @@ $ gzip *
 
 # To unsplit, simply do
 zcat teacherHidden.csv.part*.gz > teacherHidden.csv
+
+You'll also have to unzip the `teacherResults.csv.gz` file.
+
 ```
 ### Running
 ```

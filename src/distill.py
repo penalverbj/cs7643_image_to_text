@@ -1,9 +1,11 @@
 from argparse import ArgumentParser
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, Dataset
 from torchvision.io import read_image
+import torchvision.transforms as transforms
 from ignite.metrics import Rouge
 
 from tqdm import tqdm
@@ -41,7 +43,6 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
     # Load data
     training_data = DistillDataset(device=device)
     train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True)
-    # images, teacher_values, coco_annotations = next(iter(train_dataloader))
 
     # self.tl_alpha = tl_alpha
     # self.tl_beta = tl_beta
@@ -88,16 +89,22 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
         print(f"==============================================")
         epoch_loss = 0
 
-        for batch_id, data in enumerate(tqdm(train_data_loader)):
+        for batch_id, data in enumerate(tqdm(train_dataloader)):
             batch_loss = 0
             # TODO: Implement forward pass, calculate loss, and backward pass
-            out = self.model.forward()
+            images = data[0].to(device)
+            teacher_values = data[1]
+            annotations = data[2]
+
+            out = model.forward(images)
             for image in out:
                 batch_loss += triple_loss(out)
             batch_loss.backward()
             epoch_loss += batch_loss
 
             print("success")
+        
+        # TODO: validation testing here...
 
 
 # Load teacher decoder last hidden state values into memory
@@ -141,11 +148,17 @@ class DistillDataset(Dataset):
     Create a custom pytorch dataset class to facilitate batch training
     https://pytorch.org/tutorials/beginner/basics/data_tutorial.html
     """
-    def __init__(self, coco_json="./data/coco/annotations/captions_train2017.json", device="cpu"):
+    def __init__(
+        self,
+        coco_json="./data/coco/annotations/captions_train2017.json",
+        device="cpu",
+        img_size=(512, 512),
+    ):
         print("Loading images and annotations for distillation")
         self.device = device
         self.teacher_hidden, self.img_id_list, self.jpg_list, self.teacher_ann = load_teacher_data(device=self.device)
         self.coco = COCO(coco_json)
+        self.transforms = transforms.Compose([transforms.Resize(img_size)])
 
     def __len__(self):
         return self.teacher_hidden.shape[0]
@@ -155,7 +168,7 @@ class DistillDataset(Dataset):
         img_id = self.img_id_list[idx]
         # TODO: resize images to all be same size
         # https://discuss.pytorch.org/t/runtimeerror-stack-expects-each-tensor-to-be-equal-size-but-got-3-224-224-at-entry-0-and-3-224-336-at-entry-3/87211
-        image = read_image(img_path).to(self.device)
+        image = self.transforms(read_image(img_path))
 
         teacher_values = self.teacher_hidden[idx, :]
 
