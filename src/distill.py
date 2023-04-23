@@ -19,7 +19,7 @@ from pycocotools.coco import COCO
 from transformers import AutoConfig, AutoProcessor
 
 # Hyperparameters
-BATCH_SIZE = 32
+BATCH_SIZE = 16
 EPOCHS = 20
 LEARNING_RATE = 1.0e-3
 
@@ -33,7 +33,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = ImageCap(hidden_dim=hidden_dim, max_outseq_len=max_outseq_len, num_beams=num_beams).to(device)
+    model = ImageCap(hidden_dim=hidden_dim, max_outseq_len=max_outseq_len, num_beams=num_beams).to(device).half()
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1.0e-4)
     optimizer.zero_grad()
@@ -100,7 +100,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
             # teacher_values = [d[1] for d in data]
             # annotations = data[2]
 
-            out = model.forward(images.float())
+            out = model.forward(images.float().half())
             for image in out:
                 batch_loss += triple_loss(out)
             batch_loss.backward()
