@@ -43,7 +43,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer)
 
     # Load data
-    training_data = DistillDataset(device=device)
+    training_data = DistillDataset(device=device, tokenizer=tokenizer)
     train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True,)
     # train_dataloader = DataLoader(training_data, batch_size=BATCH_SIZE, shuffle=True, collate_fn=lambda x: x)
 
@@ -97,8 +97,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
             # TODO: Implement forward pass, calculate loss, and backward pass
             images = data[0]
             # teacher_values = [d[1] for d in data]
-            # annotations_list = [d['caption'] for d in data[2]]
-            # target_embeddings = [token tokenizer(annotations_list, return_tensors="pt")]
+            target_embeddings = data[2]
 
             out = model.forward(images)
             for image in out:
@@ -152,10 +151,9 @@ class DistillDataset(Dataset):
     Create a custom pytorch dataset class to facilitate batch training
     https://pytorch.org/tutorials/beginner/basics/data_tutorial.html
     """
-    # TARGET_MODEL_CONFIG =  AutoConfig.from_pretrained("julien-c/tinyvit_21M_imagenet_224")
-
     def __init__(
         self,
+        tokenizer,
         coco_json="./data/coco/annotations/captions_train2017.json",
         device="cpu",
         img_size=(224, 224),
@@ -165,11 +163,11 @@ class DistillDataset(Dataset):
         self.teacher_hidden, self.img_id_list, self.jpg_list, self.teacher_ann = load_teacher_data(device=self.device)
         self.coco = COCO(coco_json)
         self.transforms = transforms.Compose([transforms.Resize(img_size)])
-        # self.preprocessor = AutoProcessor.from_config(self.TARGET_MODEL_CONFIG)
+        self.tokenizer = tokenizer
 
     def __len__(self):
         return self.teacher_hidden.shape[0]
-    
+
     def __getitem__(self, idx):
         img_path = self.jpg_list[idx]
         img_id = self.img_id_list[idx]
@@ -184,7 +182,13 @@ class DistillDataset(Dataset):
 
         # TODO: Make coco_annotations into vector?
         # image, teacher target, "ground truth" target
-        return image, teacher_values, coco_annotations
+        coco_tokens = []
+        for ann in coco_annotations:
+            tokens = self.tokenizer(ann, return_tensors="pt")
+            coco_tokens.append(tokens['input_ids'][0])
+
+        coco_tokens = torch.cat(coco_tokens)
+        return image, teacher_values, coco_tokens
     
 
 if __name__ == "__main__":
