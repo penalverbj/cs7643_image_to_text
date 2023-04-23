@@ -16,7 +16,7 @@ from glob import glob
 import numpy as np
 
 from pycocotools.coco import COCO
-from transformers import AutoConfig, AutoProcessor
+from transformers import GPT2Tokenizer
 
 # Hyperparameters
 BATCH_SIZE = 16
@@ -34,6 +34,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     model = ImageCap(hidden_dim=hidden_dim, max_outseq_len=max_outseq_len, num_beams=num_beams).to(device).half()
+    tokenizer = GPT2Tokenizer.from_pretrained(model.decoder_model.model_name)
 
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=1.0e-4)
     optimizer.zero_grad()
@@ -94,13 +95,12 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 50, num_beams: int = 5,
         for batch_id, data in enumerate(tqdm(train_dataloader)):
             batch_loss = 0
             # TODO: Implement forward pass, calculate loss, and backward pass
-            # batch_images_list = [d[0] for d in data]
-            # batch_images = torch.stack(batch_images_list).to(device)
-            images = data[0].to(device)
+            images = data[0]
             # teacher_values = [d[1] for d in data]
-            # annotations = data[2]
+            # annotations_list = [d['caption'] for d in data[2]]
+            # target_embeddings = [token tokenizer(annotations_list, return_tensors="pt")]
 
-            out = model.forward(images.float().half())
+            out = model.forward(images)
             for image in out:
                 batch_loss += triple_loss(out)
             batch_loss.backward()
@@ -173,8 +173,7 @@ class DistillDataset(Dataset):
     def __getitem__(self, idx):
         img_path = self.jpg_list[idx]
         img_id = self.img_id_list[idx]
-        image = self.transforms(read_image(img_path))
-        # image = self.preprocessor(image)
+        image = self.transforms(read_image(img_path)).to(self.device).float().half()
 
         teacher_values = self.teacher_hidden[idx, :]
 

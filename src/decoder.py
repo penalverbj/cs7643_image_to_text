@@ -23,8 +23,9 @@ class Decoder(nn.Module):
 
         # Initializing a pre-trained decoder model with a language head
         # language head = Takes embedded vectors and turns them back into language tokens
-        self.model = GPT2LMHeadModel.from_pretrained("distilgpt2")
-        self.tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")
+        self.model_name = "distilgpt2"
+        self.model = GPT2LMHeadModel.from_pretrained(self.model_name)
+        self.tokenizer = GPT2Tokenizer.from_pretrained(self.model_name)
 
         self.hidden_dim = hidden_dim
         self.max_outseq_len = max_outseq_len
