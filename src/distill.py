@@ -131,7 +131,7 @@ def distill(hidden_dim: int = 768, max_outseq_len: int = 25, num_beams: int = 5,
 # Assuming rows in teacherHidden.csv correspond 1-to-1 with teacherResults.csv
 def load_teacher_data(device="cpu"):
     home_dir = git.Repo('.', search_parent_directories=True).working_tree_dir
-    hidden_csv = glob(home_dir + "/data/teacher_out/testHidden.csv")[0]
+    hidden_csv = glob(home_dir + "/data/teacher_out/teacherHidden.csv")[0]
 
     # Store teacher decoder last hidden state values
     hidden_values = np.genfromtxt(hidden_csv, delimiter=',')
@@ -140,7 +140,7 @@ def load_teacher_data(device="cpu"):
     # Next store teacher text and associations with images
     # I'm doing it this way because file names have been changed
     # and output string have ',' while being stored in csv file
-    results_csv = glob(home_dir + "/data/teacher_out/testResults.csv")[0]
+    results_csv = glob(home_dir + "/data/teacher_out/teacherResults.csv")[0]
     img_id_list = []
     jpg_list = []
     annotation_list = []
