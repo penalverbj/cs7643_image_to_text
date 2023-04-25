@@ -1,5 +1,7 @@
 from typing import Literal, get_args
 from datasets import load_dataset, DatasetDict
+from transformers import CLIPProcessor
+
 
 DATASET_SHUFFLE_SEED = 42
 
@@ -26,7 +28,7 @@ _DIFFUSION_DB_TYPES = Literal[
 def get_diffusion_db_train_test_valid_dataset(
     db_type: _DIFFUSION_DB_TYPES = "2m_random_1k",
     test_set_size: float = 0.1,
-    img_size: tuple = (512, 512),
+    img_size: tuple = (224, 224),
 ) -> DatasetDict:
     """Gets a diffusion_db training, validation, and test datset as a HuggingFace DatasetDict
     of uniform image size.
@@ -53,24 +55,17 @@ def get_diffusion_db_train_test_valid_dataset(
     assert db_type in options, f"'{db_type}' is not in {options}"
 
     diffusion_db = load_dataset("poloclub/diffusiondb", db_type)
+    clip_processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-    # any transforms used here should be done only once per training session, not once
-    # per epoch. https://huggingface.co/docs/datasets/image_process
-    def transforms(examples):
-        examples['pixel_values'] = [image.convert("RGB").resize(img_size) for image in examples["image"]]
+    def encode_image(examples):
+        images = [image.convert("RGB").resize(img_size) for image in examples["image"]]
+        examples['pixel_values'] = [clip_processor(images=image) for image in images]
         return examples
 
-    diffusion_db_train_testvalid = diffusion_db['train'].train_test_split(test_size=test_set_size)
-    diffusion_db_test_valid = diffusion_db_train_testvalid['test'].train_test_split(test_size=0.5)
-    diffusion_db_train_test_valid_dataset = DatasetDict(
-        {
-            'train': diffusion_db_train_testvalid['train'].map(transforms, remove_columns=["image"], batched=True),
-            'test': diffusion_db_test_valid['test'].map(transforms, remove_columns=["image"], batched=True),
-            'valid': diffusion_db_test_valid['train'].map(transforms, remove_columns=["image"], batched=True),
-        }
-    )
+    preprocessed_diffusion_db = diffusion_db['train'].map(encode_image, remove_columns=["image"], batched=True)
+    diffusion_db_train_valid = preprocessed_diffusion_db.train_test_split(test_size=test_set_size)
 
-    return diffusion_db_train_test_valid_dataset
+    return diffusion_db_train_valid
 
 
 if __name__ == "__main__":
