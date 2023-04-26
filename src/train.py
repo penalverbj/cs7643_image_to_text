@@ -1,5 +1,6 @@
 from argparse import ArgumentParser
 from datetime import datetime
+import pickle
 
 import torch
 import torch.nn as nn
@@ -20,6 +21,7 @@ from plot import plot_avg_train_valid_loss
 # Save model and optimizer checkpoint flags
 SAVE_OPTIM_CHECKPOINT = True
 SAVE_MODEL_CHECKPOINT = True
+SAVE_TRAINING_HISTORY = True
 
 # Hyperparameters
 BATCH_SIZE = 32
@@ -29,6 +31,12 @@ UNFREEZE_START = 18         # set it to lower number when more samples are inclu
 
 
 def load_pretrained_model(device: str = 'cpu'):
+    """Loads a pre-trained CLIP model while also unfreezing a specfic number of layers
+    set with the `UNFREEZE_START` hyperparameter.
+
+    :param device: Device on which to store the model
+    :type device: str
+    """
     model = CLIP()
 
     trainable_model_weights = False
@@ -36,7 +44,6 @@ def load_pretrained_model(device: str = 'cpu'):
         if name == 'vision':
             for pn, p in child.named_parameters():
                 if str(UNFREEZE_START) in pn:
-                    """start unfreezing layer , the weights are trainable"""
                     trainable_model_weights = True
                 p.requires_grad = trainable_model_weights
                 if p.requires_grad:
@@ -52,6 +59,23 @@ def train(
     scheduler=None,
     device='cpu',
 ):
+    """Performs a training iteration using the diffusion_db dataset.
+
+    :param sentence_transformer_model: Transformer to compute denser representations of sentences/captions.
+    :type sentence_transformer_model: SentenceTransformer - https://github.com/UKPLab/sentence-transformers
+    :param vision_captioning_model: Model to be trained.
+    :type vision_captioning_model: nn.Module
+    :param data_loader: Training dataset loader, in this case expecting a diffusion_db instance
+    :type data_loader: torch.DataLoader
+    :param optimizer: Optimizer to use in training.
+    :type optimizer: optim.Optimizer
+    :param scheduler: Regularizer to the learning rate, defaults to None
+    :type scheduler: torch.optim.lr_scheduler, optional
+    :param device: Device on which to run the training pass, defaults to 'cpu'
+    :type device: str, optional
+    :return: (Total training loss across the epoch), (Average training loss across the batches)
+    :rtype: tuple
+    """
     total_epoch_loss = 0
     for _, data in enumerate(tqdm(data_loader)):
         images = data['pixel_values']['pixel_values'].squeeze(1).to(device)
@@ -82,6 +106,19 @@ def evaluate(
     data_loader,
     device='cpu'
 ):
+    """Performs an evaluation iteration using the diffusion_db dataset.
+
+    :param sentence_transformer_model: Transformer to compute denser representations of sentences/captions.
+    :type sentence_transformer_model: SentenceTransformer - https://github.com/UKPLab/sentence-transformers
+    :param vision_captioning_model: Model to be trained.
+    :type vision_captioning_model: nn.Module
+    :param data_loader: Validation dataset loader, in this case expecting a diffusion_db instance
+    :type data_loader: torch.DataLoader
+    :param device: Device on which to run the evaluation pass, defaults to 'cpu'
+    :type device: str, optional
+    :return: (Total validation loss across the epoch), (Average validation loss across the batches)
+    :rtype: tuple
+    """
     total_epoch_loss = 0
     with torch.no_grad():
         for _, data in enumerate(tqdm(data_loader)):
@@ -164,6 +201,14 @@ def main():
             print(f"Best Cosine Similarity Score: {-best_sim_loss:.5f}.")
             break
 
+    if SAVE_TRAINING_HISTORY:
+        training_history = {
+            'avg_train_loss_history': avg_train_loss_history,
+            'avg_valid_loss_history': avg_valid_loss_history,
+        }
+        with open(f'cs7643_training_history_{timestamp}.pickle', 'wb') as handle:
+            pickle.dump(training_history, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     plot_avg_train_valid_loss(
         avg_train_cosine_loss_history=avg_train_loss_history,
         avg_valid_cosine_loss_history=avg_valid_loss_history,
@@ -172,5 +217,7 @@ def main():
 
 if __name__ == "__main__":
     parser = ArgumentParser(description="CS7643 Best Group Model Training script.")
+    # NOTE: args as hyperparameters or loading previous checkpoints can be expanded
+    # here.
     args = parser.parse_args()
     main(**vars(args))
