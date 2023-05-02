@@ -97,3 +97,7 @@ You'll also have to unzip the `teacherResults.csv.gz` file.
 ```
 $ python src/distill.py
 ```
+
+## TODO:
+1. Calculate auto-regressive distillation loss
+2. Fill in triple distillation loss
