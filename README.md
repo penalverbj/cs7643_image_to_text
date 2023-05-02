@@ -1,5 +1,6 @@
 # cs7643_image_to_text
-
+- Still a work in progress
+- Please see our see the related works and discussion section of our [paper]() for details about motivation
 ## Downloading data
 ---
 The following command will download the listed data sets:
